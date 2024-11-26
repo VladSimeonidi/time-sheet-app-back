@@ -8,7 +8,7 @@ const objectIdValidator = (value: any, helpers: any) => {
   return value;
 };
 
-export function validateSickLeave(requestBody: any) {
+export function validateLeave(requestBody: any) {
   const schema = joi.object({
     employee: joi
       .string()
@@ -24,7 +24,7 @@ export function validateSickLeave(requestBody: any) {
   return schema.validate(requestBody);
 }
 
-export function validateUpdateSickLeave(requestBody: any) {
+export function validateUpdateLeave(requestBody: any) {
   const schema = joi
     .object({
       employee: joi

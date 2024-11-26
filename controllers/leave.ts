@@ -1,14 +1,11 @@
-import {
-  validateSickLeave,
-  validateUpdateSickLeave,
-} from "../validators/sickLeave";
+import { validateLeave, validateUpdateLeave } from "../validators/leave";
 import { Response, Request } from "express";
 import { Types } from "mongoose";
-import LeaveModel from "../models/sickLeave";
+import LeaveModel from "../models/leave";
 
-export const createSickLeave = async (req: Request, res: Response) => {
+export const createLeave = async (req: Request, res: Response) => {
   try {
-    const { error } = validateSickLeave(req.body);
+    const { error } = validateLeave(req.body);
 
     if (error) return res.status(400).send(error.details[0].message);
 
@@ -24,7 +21,7 @@ export const createSickLeave = async (req: Request, res: Response) => {
   }
 };
 
-export const getSickLeavesPaginated = async (req: Request, res: Response) => {
+export const getLeavesPaginated = async (req: Request, res: Response) => {
   try {
     const pageNumber: number = Number(req.query.pageNumber);
 
@@ -50,9 +47,9 @@ export const getSickLeavesPaginated = async (req: Request, res: Response) => {
   }
 };
 
-export const updateSickLeave = async (req: Request, res: Response) => {
+export const updateLeave = async (req: Request, res: Response) => {
   try {
-    const { error } = validateUpdateSickLeave(req.body);
+    const { error } = validateUpdateLeave(req.body);
 
     if (error) return res.status(400).send(error.details[0].message);
 
@@ -75,7 +72,7 @@ export const updateSickLeave = async (req: Request, res: Response) => {
   }
 };
 
-export const deleteSickLeave = async (req: Request, res: Response) => {
+export const deleteLeave = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 

@@ -32,6 +32,7 @@ const TimeSheetSchema = new Schema<TimeSheet>(
     total_hours_worked: {
       type: Number,
       required: true,
+      min: [1, "Total hours worked must be greater than 0"],
     },
 
     timesheet_status: {
