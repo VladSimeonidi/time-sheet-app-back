@@ -5,7 +5,7 @@ import {
   getLeavesPaginated,
   updateLeave,
   deleteLeave,
-} from "../controllers/sickLeave";
+} from "../controllers/leave";
 
 const router: Router = express.Router();
 

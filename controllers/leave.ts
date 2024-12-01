@@ -2,12 +2,33 @@ import { validateLeave, validateUpdateLeave } from "../validators/leave";
 import { Response, Request } from "express";
 import { Types } from "mongoose";
 import LeaveModel from "../models/leave";
+import TimeSheetModel from "../models/timesheet";
 
 export const createLeave = async (req: Request, res: Response) => {
   try {
     const { error } = validateLeave(req.body);
 
     if (error) return res.status(400).send(error.details[0].message);
+
+    const { employee, start_date } = req.body;
+
+    if (!employee) return res.status(400).send("No employee provided");
+
+    if (!start_date) return res.status(400).send("No start_date provided");
+
+    const normalizedStartDate = new Date(start_date).setHours(0, 0, 0, 0);
+
+    const conflictingTimeSheet = await TimeSheetModel.findOne({
+      employee: employee,
+      date: normalizedStartDate,
+    });
+
+    if (conflictingTimeSheet)
+      return res
+        .status(400)
+        .json(
+          `Error: "Cannot add sick leave on a day with existing work hours`
+        );
 
     const newLeaveModel = new LeaveModel(req.body);
 
