@@ -3,6 +3,7 @@ import { Response, Request } from "express";
 import { Types } from "mongoose";
 import LeaveModel from "../models/leave";
 import TimeSheetModel from "../models/timesheet";
+import { IsConflictingTimeSheet } from "./utils/utils";
 
 export const createLeave = async (req: Request, res: Response) => {
   try {
@@ -10,25 +11,28 @@ export const createLeave = async (req: Request, res: Response) => {
 
     if (error) return res.status(400).send(error.details[0].message);
 
-    const { employee, start_date } = req.body;
+    const { employee, start_date, end_date } = req.body;
 
     if (!employee) return res.status(400).send("No employee provided");
 
     if (!start_date) return res.status(400).send("No start_date provided");
 
-    const normalizedStartDate = new Date(start_date).setHours(0, 0, 0, 0);
+    if (!end_date) return res.status(400).send("No end_date provided");
 
-    const conflictingTimeSheet = await TimeSheetModel.findOne({
-      employee: employee,
-      date: normalizedStartDate,
-    });
+    const normalizedStartDate = new Date(start_date).setHours(0, 0, 0, 0);
+    const normalizedEndDate = new Date(end_date).setHours(0, 0, 0, 0);
+
+    const conflictingTimeSheet = await IsConflictingTimeSheet(
+      TimeSheetModel,
+      employee,
+      normalizedStartDate,
+      normalizedEndDate
+    );
 
     if (conflictingTimeSheet)
       return res
         .status(400)
-        .json(
-          `Error: "Cannot add sick leave on a day with existing work hours`
-        );
+        .json("Can not add sick leave on a day with existing work hours");
 
     const newLeaveModel = new LeaveModel(req.body);
 
@@ -76,8 +80,31 @@ export const updateLeave = async (req: Request, res: Response) => {
 
     const { id } = req.params;
 
+    const { employee, start_date, end_date } = req.body;
+
     if (!Types.ObjectId.isValid(id))
-      return res.status(400).send("Invalid ObjectId");
+      return res.status(400).send("ObjectId is Invalid");
+
+    if (!employee) return res.status(400).send("No employee provided");
+
+    if (!start_date) return res.status(400).send("No start_date provided");
+
+    if (!end_date) return res.status(400).send("No end_date provided");
+
+    const normalizedStartDate = new Date(start_date).setHours(0, 0, 0, 0);
+    const normalizedEndDate = new Date(end_date).setHours(0, 0, 0, 0);
+
+    const conflictingTimeSheet = await IsConflictingTimeSheet(
+      TimeSheetModel,
+      employee,
+      normalizedStartDate,
+      normalizedEndDate
+    );
+
+    if (conflictingTimeSheet)
+      return res
+        .status(400)
+        .json("Can not add sick leave on a day with existing work hours");
 
     const leave = await LeaveModel.findByIdAndUpdate(
       id,

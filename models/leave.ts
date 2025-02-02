@@ -1,5 +1,5 @@
 import mongoose, { Schema } from "mongoose";
-import { Leave } from "./interfaces/schemas/sickLeave";
+import { Leave } from "./interfaces/schemas/leave";
 
 const LeaveSchema = new Schema<Leave>(
   {
