@@ -6,7 +6,6 @@ import TimeSheetModel from "../models/timesheet";
 import { Response, Request } from "express";
 import { Types } from "mongoose";
 import LeaveModel from "../models/leave";
-import { getLeaveDaysForEmployee } from "./utils/leaveHelpers";
 
 export const createTimeSheet = async (req: Request, res: Response) => {
   try {
@@ -118,16 +117,5 @@ export const deleteTimeSheet = async (req: Request, res: Response) => {
     res.status(200).json(timeSheet);
   } catch (error: any) {
     res.status(500).json(`Error: ${error.message}`);
-  }
-};
-
-export const getDisabledDates = async (req: Request, res: Response) => {
-  const { id } = req.params;
-
-  try {
-    const leaveDays = await getLeaveDaysForEmployee(id);
-    return res.status(200).json(leaveDays);
-  } catch (error) {
-    return res.status(500).json(`Error: fetching leave days`);
   }
 };

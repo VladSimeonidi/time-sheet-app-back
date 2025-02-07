@@ -3,7 +3,7 @@ import { Response, Request } from "express";
 import { Types } from "mongoose";
 import LeaveModel from "../models/leave";
 import TimeSheetModel from "../models/timesheet";
-import { IsConflictingTimeSheet } from "./utils/utils";
+import { IsConflictingTimeSheet } from "../utils/utils";
 
 export const createLeave = async (req: Request, res: Response) => {
   try {
