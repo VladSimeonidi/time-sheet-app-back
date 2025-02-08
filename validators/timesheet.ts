@@ -19,7 +19,7 @@ export function validateNewTimeSheet(requestBody: any) {
     start_time: joi.date().required(),
     end_time: joi.date().required(),
     breaks: joi.boolean().required(),
-    total_hours_worked: joi.number().required(),
+    total_hours_worked: joi.number().min(1).required(),
     timesheet_status: joi.string().required(),
   });
 
@@ -37,7 +37,7 @@ export function validateUpdateTimeSheet(requestBody: any) {
       start_time: joi.date(),
       end_time: joi.date(),
       breaks: joi.boolean(),
-      total_hours_worked: joi.number(),
+      total_hours_worked: joi.number().min(1),
       timesheet_status: joi.string(),
     })
     .min(1);
