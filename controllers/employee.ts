@@ -7,6 +7,9 @@ import { Response, Request } from "express";
 // import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { Types } from "mongoose";
+import TimeSheetModel from "../models/timesheet";
+import LeaveModel from "../models/leave";
+import { getEmployeeSummaryService } from "../services/employeeSummaryService";
 
 export const createEmployee = async (req: Request, res: Response) => {
   try {
@@ -164,6 +167,34 @@ export const updateEmployee = async (req: Request, res: Response) => {
     res.status(200).json(employee);
   } catch (error: any) {
     res.status(500).json(`Error: ${error.message}`);
+  }
+};
+
+export const getEmployeeSummary = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { startDate, endDate } = req.query;
+
+    if (!Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid employee ID" });
+    }
+
+    if (
+      !startDate ||
+      !endDate ||
+      typeof startDate !== "string" ||
+      typeof endDate !== "string"
+    ) {
+      return res.status(400).json({
+        message: "Start and end date are required and must be strings",
+      });
+    }
+
+    const summary = await getEmployeeSummaryService(id, startDate, endDate);
+
+    res.status(200).json(summary);
+  } catch (error: any) {
+    res.status(500).json({ message: `Error: ${error.message}` });
   }
 };
 
