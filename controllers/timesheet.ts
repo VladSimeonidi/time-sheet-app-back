@@ -67,7 +67,7 @@ export const getTimeSheetsPaginated = async (req: Request, res: Response) => {
       .skip((pageNumber - 1) * pageSize)
       .limit(pageSize)
       .populate("employee")
-      .sort({ updatedAt: -1 })
+      .sort({ date: -1 })
       .lean();
 
     const documentsTotal = await TimeSheetModel.countDocuments();
