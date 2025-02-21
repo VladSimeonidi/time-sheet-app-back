@@ -1,3 +1,4 @@
+import EmployeeModel from "../models/employee";
 import { Leave } from "../models/interfaces/schemas/leave";
 import { TimeSheet } from "../models/interfaces/schemas/timesheet";
 import LeaveModel from "../models/leave";
@@ -15,6 +16,12 @@ export const fetchLeaves = async (id: string, start: Date, end: Date) => {
     employee: id,
     $or: [{ start_date: { $gte: start } }, { end_date: { $lte: end } }],
   }).sort({ start_date: 1 });
+};
+
+export const fetchEmployee = async (id: string) => {
+  return await EmployeeModel.findOne({
+    _id: id,
+  });
 };
 
 export const buildSummaryMap = (timesheets: TimeSheet[], leaves: Leave[]) => {
