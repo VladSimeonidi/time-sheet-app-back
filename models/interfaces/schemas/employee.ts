@@ -7,4 +7,5 @@ export interface Employee extends Document {
   username: string;
   role: string;
   employment_status: string;
+  weekly_hours: number;
 }

@@ -33,6 +33,11 @@ const employeeSchema = new Schema<Employee>(
       type: String,
       required: true,
     },
+
+    weekly_hours: {
+      type: Number,
+      required: true,
+    },
   },
 
   { timestamps: true }

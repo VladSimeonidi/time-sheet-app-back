@@ -11,6 +11,7 @@ export function validateNewEmployee(requestBody: any) {
     surname: joi.string().required(),
     role: joi.string().required(),
     employment_status: joi.string().required(),
+    weekly_hours: joi.number().required(),
   });
 
   return schema.validate(requestBody);
@@ -25,6 +26,7 @@ export function validateUpdateEmployee(requestBody: any) {
       surname: joi.string(),
       role: joi.string(),
       employment_status: joi.string(),
+      weekly_hours: joi.number(),
     })
     .min(1);
 
