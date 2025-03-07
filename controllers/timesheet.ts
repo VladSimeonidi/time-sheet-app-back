@@ -63,14 +63,22 @@ export const getTimeSheetsPaginated = async (req: Request, res: Response) => {
         .status(400)
         .send("No parameter, page number or page size is NaN");
 
-    const timeSheets = await TimeSheetModel.find()
+    type Filters = { employee?: string };
+
+    let filters: Filters = {};
+
+    if (req.query.employeeId) {
+      filters.employee = req.query.employeeId as string;
+    }
+
+    const timeSheets = await TimeSheetModel.find(filters)
       .skip((pageNumber - 1) * pageSize)
       .limit(pageSize)
       .populate("employee")
       .sort({ date: -1 })
       .lean();
 
-    const documentsTotal = await TimeSheetModel.countDocuments();
+    const documentsTotal = await TimeSheetModel.countDocuments(filters);
 
     res.status(200).json({ items: timeSheets, totalRecords: documentsTotal });
   } catch (error: any) {

@@ -1,7 +1,7 @@
 import * as dotenv from "dotenv";
 import express, { Express } from "express";
 import { logger } from "./logger";
-import limiter from "express-rate-limit";
+// import limiter from "express-rate-limit";
 import cors from "cors";
 import useRoutes from "./routes";
 import { connectDB } from "./db";
