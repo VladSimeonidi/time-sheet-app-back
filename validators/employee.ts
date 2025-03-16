@@ -32,3 +32,21 @@ export function validateUpdateEmployee(requestBody: any) {
 
   return schema.validate(requestBody);
 }
+
+export function validatePagination(requestBody: any) {
+  const schema = joi.object({
+    pageNumber: joi.number().integer().min(1).required(),
+    pageSize: joi.number().integer().min(1).required(),
+  });
+
+  return schema.validate(requestBody);
+}
+
+export function validateTimeRange(requestBody: any) {
+  const schema = joi.object({
+    startDate: joi.date().required(),
+    endDate: joi.date().required(),
+  });
+
+  return schema.validate(requestBody);
+}

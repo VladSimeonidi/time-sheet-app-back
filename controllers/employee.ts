@@ -1,41 +1,29 @@
 import {
   validateNewEmployee,
   validateUpdateEmployee,
+  validatePagination,
+  validateTimeRange,
 } from "../validators/employee";
 import EmployeeModel from "../models/employee";
 import { Response, Request } from "express";
-// import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
 import { Types } from "mongoose";
-import TimeSheetModel from "../models/timesheet";
-import LeaveModel from "../models/leave";
 import { getEmployeeSummaryService } from "../services/employeeSummaryService";
 
 export const createEmployee = async (req: Request, res: Response) => {
   try {
-    const { error } = validateNewEmployee(req.body);
+    const { error, value: data } = validateNewEmployee(req.body);
 
     if (error) return res.status(400).send(error.details[0].message);
 
-    // let { email, password } = req.body;
-
-    let { email } = req.body;
-
     let isEmailExist = await EmployeeModel.findOne({
-      email: email,
+      email: data.email,
     });
 
     if (isEmailExist) {
       return res.status(400).json("Employee with such email exists");
     }
 
-    // const salt = bcrypt.genSaltSync(10);
-
-    // const hash = bcrypt.hashSync(password, salt);
-
-    // const newEmployeeModel = new EmployeeModel({ ...req.body, password: hash });
-
-    const newEmployeeModel = new EmployeeModel(req.body);
+    const newEmployeeModel = new EmployeeModel(data);
 
     await newEmployeeModel.save();
 
@@ -43,48 +31,7 @@ export const createEmployee = async (req: Request, res: Response) => {
 
     return res.status(200).json(newEmployee);
   } catch (error: any) {
-    res.status(500).json(`Error: ${error.message}`);
-  }
-};
-
-export const loginEmployee = async (req: Request, res: Response) => {
-  try {
-    const { email, password } = req.body;
-
-    const employeeDocument = await EmployeeModel.findOne({ email });
-
-    if (!employeeDocument) return res.status(404).json("Employee not found!");
-
-    // const isMatchPasswords: boolean = await bcrypt.compare(
-    //   password,
-    //   employeeDocument.password
-    // );
-
-    // if (!isMatchPasswords)
-    //   return res.status(404).json("You entered a wrong password!");
-
-    const employee = employeeDocument.toObject();
-
-    const payload = {
-      _id: employee._id,
-      username: employee.username,
-      email: employee.email,
-    };
-
-    const secretKey = process.env.SECRET_KEY;
-
-    if (!secretKey) throw new Error("Error on server in employee controllers");
-
-    let jwtToken = jwt.sign(payload, secretKey, {
-      expiresIn: "24hr",
-    });
-
-    return res.status(200).json({
-      token: `Bearer ${jwtToken}`,
-      employee: payload,
-    });
-  } catch (error: any) {
-    res.status(500).json(`Error: ${error.message}`);
+    res.status(500).json({ error: error.message });
   }
 };
 
@@ -96,7 +43,7 @@ export const getAllEmployees = async (req: Request, res: Response) => {
 
     res.status(200).json(employees);
   } catch (error: any) {
-    res.status(500).json(`Error: ${error.message}`);
+    res.status(500).json({ error: error.message });
   }
 };
 
@@ -113,23 +60,19 @@ export const getEmployee = async (req: Request, res: Response) => {
 
     res.status(200).json(employee);
   } catch (error: any) {
-    res.status(500).json(`Error: ${error.message}`);
+    res.status(500).json({ error: error.message });
   }
 };
 
 export const getEmployeesPaginated = async (req: Request, res: Response) => {
   try {
-    const pageNumber: number = Number(req.query.pageNumber);
+    const { error, value } = validatePagination(req.query);
 
-    const pageSize: number = Number(req.query.pageSize);
+    if (error) {
+      return res.status(400).json({ error: error.details[0].message });
+    }
 
-    if (!pageNumber || !pageSize)
-      return res
-        .status(400)
-        .send("No parameter, page number or page size is NaN");
-
-    if (pageNumber <= 0)
-      return res.status(400).send("Page number less or equals zero");
+    const { pageNumber, pageSize } = value;
 
     const employees = await EmployeeModel.find()
       .skip((pageNumber - 1) * pageSize)
@@ -141,13 +84,13 @@ export const getEmployeesPaginated = async (req: Request, res: Response) => {
 
     res.status(200).json({ items: employees, totalRecords: documentsTotal });
   } catch (error: any) {
-    res.status(500).json(`Error: ${error.message}`);
+    res.status(500).json({ error: error.message });
   }
 };
 
 export const updateEmployee = async (req: Request, res: Response) => {
   try {
-    const { error } = validateUpdateEmployee(req.body);
+    const { error, value: data } = validateUpdateEmployee(req.body);
 
     if (error) return res.status(400).send(error.details[0].message);
 
@@ -158,7 +101,7 @@ export const updateEmployee = async (req: Request, res: Response) => {
 
     const employee = await EmployeeModel.findByIdAndUpdate(
       id,
-      { $set: req.body },
+      { $set: data },
       { new: true }
     ).lean();
 
@@ -166,35 +109,29 @@ export const updateEmployee = async (req: Request, res: Response) => {
 
     res.status(200).json(employee);
   } catch (error: any) {
-    res.status(500).json(`Error: ${error.message}`);
+    res.status(500).json({ error: error.message });
   }
 };
 
 export const getEmployeeSummary = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { startDate, endDate } = req.query;
 
     if (!Types.ObjectId.isValid(id)) {
       return res.status(400).json({ message: "Invalid employee ID" });
     }
 
-    if (
-      !startDate ||
-      !endDate ||
-      typeof startDate !== "string" ||
-      typeof endDate !== "string"
-    ) {
-      return res.status(400).json({
-        message: "Start and end date are required and must be strings",
-      });
-    }
+    const { error, value: timeRange } = validateTimeRange(req.query);
+
+    if (error) return res.status(400).send(error.details[0].message);
+
+    const { startDate, endDate } = timeRange;
 
     const summary = await getEmployeeSummaryService(id, startDate, endDate);
 
     res.status(200).json(summary);
   } catch (error: any) {
-    res.status(500).json({ message: `Error: ${error.message}` });
+    res.status(500).json({ message: { error: error.message } });
   }
 };
 
@@ -211,6 +148,6 @@ export const deleteEmployee = async (req: Request, res: Response) => {
 
     res.status(200).json(employee);
   } catch (error: any) {
-    res.status(500).json(`Error: ${error.message}`);
+    res.status(500).json({ error: error.message });
   }
 };
