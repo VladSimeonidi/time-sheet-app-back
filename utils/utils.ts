@@ -1,16 +1,20 @@
 import { Model, Schema } from "mongoose";
 
-export async function IsConflictingTimeSheet(
+interface employeeDateRange {
+  employee: any;
+  startDate: number;
+  endDate: number;
+}
+
+export async function hasConflictingTimeSheet(
   model: Model<any>,
-  employee: Schema.Types.ObjectId,
-  startDate: number,
-  endDate: number
+  dateRange: employeeDateRange
 ): Promise<boolean> {
   const existingTime = await model.findOne({
-    employee: employee,
+    employee: dateRange.employee,
     date: {
-      $gte: startDate,
-      $lte: endDate,
+      $gte: dateRange.startDate,
+      $lte: dateRange.endDate,
     },
   });
 

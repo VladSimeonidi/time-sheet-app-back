@@ -1,5 +1,6 @@
 import joi from "joi";
 import { Types } from "mongoose";
+import { LeaveRequest } from "../models/interfaces/leave";
 
 const objectIdValidator = (value: any, helpers: any) => {
   if (!Types.ObjectId.isValid(value)) {
@@ -8,8 +9,10 @@ const objectIdValidator = (value: any, helpers: any) => {
   return value;
 };
 
-export function validateLeave(requestBody: any) {
-  const schema = joi.object({
+export function validateLeave(
+  requestBody: any
+): joi.ValidationResult<LeaveRequest> {
+  const schema = joi.object<LeaveRequest>({
     employee: joi
       .string()
       .length(24)

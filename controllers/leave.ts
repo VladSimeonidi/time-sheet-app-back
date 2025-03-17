@@ -3,30 +3,24 @@ import { Response, Request } from "express";
 import { Types } from "mongoose";
 import LeaveModel from "../models/leave";
 import TimeSheetModel from "../models/timesheet";
-import { IsConflictingTimeSheet } from "../utils/utils";
+import { hasConflictingTimeSheet } from "../utils/utils";
 
 export const createLeave = async (req: Request, res: Response) => {
   try {
-    const { error } = validateLeave(req.body);
+    const { error, value: data } = validateLeave(req.body);
 
     if (error) return res.status(400).send(error.details[0].message);
 
-    const { employee, start_date, end_date } = req.body;
+    const { employee, start_date, end_date } = data;
 
-    if (!employee) return res.status(400).send("No employee provided");
+    const startDate = new Date(start_date).setHours(0, 0, 0, 0);
+    const endDate = new Date(end_date).setHours(0, 0, 0, 0);
 
-    if (!start_date) return res.status(400).send("No start_date provided");
+    const dateRange = { employee, startDate, endDate };
 
-    if (!end_date) return res.status(400).send("No end_date provided");
-
-    const normalizedStartDate = new Date(start_date).setHours(0, 0, 0, 0);
-    const normalizedEndDate = new Date(end_date).setHours(0, 0, 0, 0);
-
-    const conflictingTimeSheet = await IsConflictingTimeSheet(
+    const conflictingTimeSheet = await hasConflictingTimeSheet(
       TimeSheetModel,
-      employee,
-      normalizedStartDate,
-      normalizedEndDate
+      dateRange
     );
 
     if (conflictingTimeSheet)
@@ -34,7 +28,7 @@ export const createLeave = async (req: Request, res: Response) => {
         .status(400)
         .json("Can not add sick leave on a day with existing work hours");
 
-    const newLeaveModel = new LeaveModel(req.body);
+    const newLeaveModel = new LeaveModel(data);
 
     await newLeaveModel.save();
 
@@ -42,7 +36,7 @@ export const createLeave = async (req: Request, res: Response) => {
 
     return res.status(200).json(newLeave);
   } catch (error: any) {
-    res.status(500).json(`Error: ${error.message}`);
+    res.status(500).json({ error: error.message });
   }
 };
 
@@ -68,37 +62,31 @@ export const getLeavesPaginated = async (req: Request, res: Response) => {
 
     res.status(200).json({ items: leave, totalRecords: documentsTotal });
   } catch (error: any) {
-    res.status(500).json(`Error: ${error.message}`);
+    res.status(500).json({ error: error.message });
   }
 };
 
 export const updateLeave = async (req: Request, res: Response) => {
   try {
-    const { error } = validateUpdateLeave(req.body);
+    const { error, value: data } = validateUpdateLeave(req.body);
 
     if (error) return res.status(400).send(error.details[0].message);
 
     const { id } = req.params;
 
-    const { employee, start_date, end_date } = req.body;
+    const { employee, start_date, end_date } = data;
 
     if (!Types.ObjectId.isValid(id))
       return res.status(400).send("ObjectId is Invalid");
 
-    if (!employee) return res.status(400).send("No employee provided");
+    const startDate = new Date(start_date).setHours(0, 0, 0, 0);
+    const endDate = new Date(end_date).setHours(0, 0, 0, 0);
 
-    if (!start_date) return res.status(400).send("No start_date provided");
+    const dateRange = { employee, startDate, endDate };
 
-    if (!end_date) return res.status(400).send("No end_date provided");
-
-    const normalizedStartDate = new Date(start_date).setHours(0, 0, 0, 0);
-    const normalizedEndDate = new Date(end_date).setHours(0, 0, 0, 0);
-
-    const conflictingTimeSheet = await IsConflictingTimeSheet(
+    const conflictingTimeSheet = await hasConflictingTimeSheet(
       TimeSheetModel,
-      employee,
-      normalizedStartDate,
-      normalizedEndDate
+      dateRange
     );
 
     if (conflictingTimeSheet)
@@ -108,7 +96,7 @@ export const updateLeave = async (req: Request, res: Response) => {
 
     const leave = await LeaveModel.findByIdAndUpdate(
       id,
-      { $set: req.body },
+      { $set: data },
       { new: true }
     ).lean();
 
@@ -116,7 +104,7 @@ export const updateLeave = async (req: Request, res: Response) => {
 
     res.status(200).json(leave);
   } catch (error: any) {
-    res.status(500).json(`Error: ${error.message}`);
+    res.status(500).json({ error: error.message });
   }
 };
 
@@ -133,6 +121,6 @@ export const deleteLeave = async (req: Request, res: Response) => {
 
     res.status(200).json(leave);
   } catch (error: any) {
-    res.status(500).json(`Error: ${error.message}`);
+    res.status(500).json({ error: error.message });
   }
 };
