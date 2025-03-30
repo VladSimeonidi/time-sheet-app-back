@@ -24,33 +24,35 @@ export const fetchEmployee = async (id: string) => {
   });
 };
 
-export const buildSummaryMap = (timesheets: TimeSheet[], leaves: Leave[]) => {
+export const buildSummaryMap = (items: (TimeSheet | Leave)[][]) => {
   const summaryMap = new Map<string, SummaryEmployee>();
 
-  timesheets.forEach((ts) => {
-    summaryMap.set(ts.date.toISOString().split("T")[0], {
-      date: ts.date,
-      day_of_week: ts.date.toLocaleString("en-US", { weekday: "long" }),
-      type: "Work",
-      start_time: ts.start_time,
-      end_time: ts.end_time,
-      total_hours: ts.total_hours_worked,
-      status: ts.timesheet_status,
-    });
-  });
-
-  leaves.forEach((leave) => {
-    let currentDate = new Date(leave.start_date);
-    while (currentDate <= leave.end_date) {
-      const dateStr = currentDate.toISOString().split("T")[0];
-      summaryMap.set(dateStr, {
-        date: new Date(currentDate),
-        day_of_week: currentDate.toLocaleString("en-US", { weekday: "long" }),
-        type: "Leave",
-        leave_type: leave.leave_type,
-        status: leave.status,
+  items.flat().forEach((item) => {
+    if ("start_date" in item) {
+      // Handling Leave
+      let currentDate = new Date(item.start_date);
+      while (currentDate <= item.end_date) {
+        const dateStr = currentDate.toISOString().split("T")[0];
+        summaryMap.set(dateStr, {
+          date: new Date(currentDate),
+          day_of_week: currentDate.toLocaleString("en-US", { weekday: "long" }),
+          type: "Leave",
+          leave_type: item.leave_type,
+          status: item.status,
+        });
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+    } else {
+      // Handling TimeSheet
+      summaryMap.set(item.date.toISOString().split("T")[0], {
+        date: item.date,
+        day_of_week: item.date.toLocaleString("en-US", { weekday: "long" }),
+        type: "Work",
+        start_time: item.start_time,
+        end_time: item.end_time,
+        total_hours: item.total_hours_worked,
+        status: item.timesheet_status,
       });
-      currentDate.setDate(currentDate.getDate() + 1);
     }
   });
 
@@ -80,7 +82,7 @@ export const generateWeeklySummary = (
 
     const daySummary = summaryMap.get(dateStr) || {
       date: new Date(currentDate),
-      day_of_week: currentDate.toLocaleString("en-US", { weekday: "long" }),
+      day_of_week: currentDate.toLocaleString("en-GB", { weekday: "long" }),
       type: null,
       start_time: null,
       end_time: null,
